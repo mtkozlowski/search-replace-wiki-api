@@ -32,3 +32,8 @@ export async function getDataFromWiki(url) {
     return new Error(err);
   }
 }
+
+export function stripHtml(snippet) {
+  const regex = /(?:<span class="searchmatch">)(\w+)(?:<\/span>)/gi;
+  return snippet.replace(regex, '$1');
+}
