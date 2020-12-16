@@ -37,3 +37,9 @@ export function stripHtml(snippet) {
   const regex = /(?:<span class="searchmatch">)(\w+)(?:<\/span>)/gi;
   return snippet.replace(regex, '$1');
 }
+
+export const decodeHtml = (encodedText) => {
+  const shadowTextarea = document.createElement('textarea');
+  shadowTextarea.innerHTML = encodedText;
+  return shadowTextarea.value;
+};
