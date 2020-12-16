@@ -15,6 +15,7 @@ function App() {
   const [disableReplace, setDisableReplace] = useState(false);
 
   const debouncedSearchPhrase = useDebounce(searchPhrase, 1000);
+
   useEffect(() => {
     if (debouncedSearchPhrase) {
       getDataFromWiki(debouncedSearchPhrase).then((results) => {
@@ -32,6 +33,8 @@ function App() {
   const handleSearchFormSubmit = async (event) => {
     event.preventDefault();
 
+    if (!searchPhrase || searchPhrase === '') return;
+
     const data = await getDataFromWiki(searchPhrase);
     setWikiData(data);
   };
@@ -39,29 +42,35 @@ function App() {
   const handleReplaceFormSubmit = (event) => {
     event.preventDefault();
 
+    const regex = new RegExp(`\\b${searchPhrase}\\b`, 'i');
+
     const index = wikiData.findIndex(({ snippet }) => {
-      return snippet.includes(searchPhrase);
+      return regex.test(snippet);
     });
-
     if (index === -1) return;
-    const edge = wikiData[index];
 
-    const newText = edge.snippet.replace(searchPhrase, replacePhrase);
-
-    console.log(newText, edge);
-
-    const newData = wikiData;
-    // const newSnippet = { snippet: newText };
+    const newData = Array.from(wikiData);
+    const edge = newData[index];
+    const newText = edge.snippet.replace(regex, replacePhrase);
     const newItem = {
       ...edge,
-      ...{ snippet: newText },
+      snippet: newText,
     };
 
-    console.log(newItem);
-
     newData.splice(index, 1, newItem);
+    setWikiData(newData);
+  };
 
-    console.log(newText, newData);
+  const handleReplaceAll = () => {
+    const regex = new RegExp(`\\b${searchPhrase}\\b`, 'gi');
+
+    const newData = wikiData.map((edge) => {
+      return {
+        ...edge,
+        title: edge.title.replace(regex, replacePhrase),
+        snippet: edge.snippet.replace(regex, replacePhrase),
+      };
+    });
 
     setWikiData(newData);
   };
@@ -86,7 +95,12 @@ function App() {
             onChange={({ target: { value } }) => setReplacePhrase(value)}
           />
           <Button type="submit" name="replace" value="Replace" />
-          <Button type="button" name="replaceAll" value="Replace All" />
+          <Button
+            type="button"
+            name="replaceAll"
+            value="Replace All"
+            onClick={handleReplaceAll}
+          />
         </fieldset>
       </Form>
       <ResultsList results={wikiData} searchPhrase={searchPhrase} />
