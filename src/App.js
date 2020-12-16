@@ -1,104 +1,97 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import useDebounce from './utils/useDebounce';
+
 import Layout from './styles/components/Layout';
 import TextInput from './styles/components/TextInput';
 import Button from './styles/components/Button';
 import ResultsList from './styles/components/ResultsList';
 import Form from './styles/components/Form';
-import { buildUrl, getDataFromWiki } from './utils/utils';
+import { getDataFromWiki } from './utils/utils';
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      searchPhrase: '',
-      wikiData: [],
-      replacePhrase: '',
-    };
+function App() {
+  const [searchPhrase, setSearchPhrase] = useState('');
+  const [wikiData, setWikiData] = useState([]);
+  const [replacePhrase, setReplacePhrase] = useState('');
+  const [disableReplace, setDisableReplace] = useState(false);
 
-    this.handleSearchPhraseChange = this.handleSearchPhraseChange.bind(this);
-    this.handleSearchFormSubmit = this.handleSearchFormSubmit.bind(this);
+  const debouncedSearchPhrase = useDebounce(searchPhrase, 1000);
+  useEffect(() => {
+    if (debouncedSearchPhrase) {
+      getDataFromWiki(debouncedSearchPhrase).then((results) => {
+        setWikiData(results);
+      });
+    } else {
+      setWikiData([]);
+    }
+  }, [debouncedSearchPhrase]);
 
-    this.handleReplacePhraseChange = this.handleReplacePhraseChange.bind(this);
-    this.handleReplaceFormSubmit = this.handleReplaceFormSubmit.bind(this);
-  }
+  useEffect(() => {
+    setDisableReplace(searchPhrase === '');
+  });
 
-  handleSearchPhraseChange(event) {
-    this.setState({
-      searchPhrase: event.target.value,
-    });
-  }
-
-  async handleSearchFormSubmit(event) {
+  const handleSearchFormSubmit = async (event) => {
     event.preventDefault();
 
-    const { searchPhrase } = this.state;
-    const url = buildUrl(searchPhrase);
+    const data = await getDataFromWiki(searchPhrase);
+    setWikiData(data);
+  };
 
-    const data = await getDataFromWiki(url);
-
-    this.setState({
-      wikiData: data,
-    });
-  }
-
-  handleReplacePhraseChange(event) {
-    this.setState({
-      replacePhrase: event.target.value,
-    });
-  }
-
-  handleReplaceFormSubmit(event) {
+  const handleReplaceFormSubmit = (event) => {
     event.preventDefault();
-
-    const { wikiData, replacePhrase, searchPhrase } = this.state;
 
     const index = wikiData.findIndex(({ snippet }) => {
       return snippet.includes(searchPhrase);
     });
 
     if (index === -1) return;
+    const edge = wikiData[index];
 
-    wikiData[index].snippet = wikiData[index].snippet.replace(
-      searchPhrase,
-      replacePhrase,
-    );
+    const newText = edge.snippet.replace(searchPhrase, replacePhrase);
 
-    this.setState({
-      wikiData,
-    });
-  }
+    console.log(newText, edge);
 
-  render() {
-    const { wikiData, searchPhrase } = this.state;
-    const replaceDisabled = searchPhrase.length === 0;
+    const newData = wikiData;
+    // const newSnippet = { snippet: newText };
+    const newItem = {
+      ...edge,
+      ...{ snippet: newText },
+    };
 
-    return (
-      <Layout>
-        <Form onSubmit={this.handleSearchFormSubmit}>
-          <fieldset>
-            <TextInput
-              displayText="Search phrase:"
-              inputName="search"
-              onChange={this.handleSearchPhraseChange}
-            />
-            <Button type="submit" name="submit" />
-          </fieldset>
-        </Form>
-        <Form onSubmit={this.handleReplaceFormSubmit}>
-          <fieldset disabled={replaceDisabled}>
-            <TextInput
-              displayText="Replace with:"
-              inputName="search"
-              onChange={this.handleReplacePhraseChange}
-            />
-            <Button type="submit" name="replace" value="Replace" />
-            <Button type="button" name="replaceAll" value="Replace All" />
-          </fieldset>
-        </Form>
-        <ResultsList results={wikiData} searchPhrase={searchPhrase} />
-      </Layout>
-    );
-  }
+    console.log(newItem);
+
+    newData.splice(index, 1, newItem);
+
+    console.log(newText, newData);
+
+    setWikiData(newData);
+  };
+
+  return (
+    <Layout>
+      <Form onSubmit={handleSearchFormSubmit}>
+        <fieldset>
+          <TextInput
+            displayText="Search phrase:"
+            inputName="search"
+            onChange={({ target: { value } }) => setSearchPhrase(value)}
+          />
+          <Button type="submit" name="submit" />
+        </fieldset>
+      </Form>
+      <Form onSubmit={handleReplaceFormSubmit}>
+        <fieldset disabled={disableReplace}>
+          <TextInput
+            displayText="Replace with:"
+            inputName="search"
+            onChange={({ target: { value } }) => setReplacePhrase(value)}
+          />
+          <Button type="submit" name="replace" value="Replace" />
+          <Button type="button" name="replaceAll" value="Replace All" />
+        </fieldset>
+      </Form>
+      <ResultsList results={wikiData} searchPhrase={searchPhrase} />
+    </Layout>
+  );
 }
 
 export default App;

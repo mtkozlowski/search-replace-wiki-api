@@ -16,7 +16,8 @@ export function buildUrl(searchPhrase) {
   return url;
 }
 
-export async function getDataFromWiki(url) {
+export async function getDataFromWiki(searchPhrase) {
+  const url = buildUrl(searchPhrase);
   try {
     const response = await fetch(url);
     const data = await response.json();
