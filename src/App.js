@@ -9,10 +9,10 @@ import Form from './styles/components/Form';
 import { getDataFromWiki } from './utils/utils';
 
 function App() {
-  const [searchPhrase, setSearchPhrase] = useState('');
-  const [wikiData, setWikiData] = useState([]);
-  const [replacePhrase, setReplacePhrase] = useState('');
   const [disableReplace, setDisableReplace] = useState(false);
+  const [searchPhrase, setSearchPhrase] = useState('');
+  const [replacePhrase, setReplacePhrase] = useState('');
+  const [wikiData, setWikiData] = useState([]);
 
   const debouncedSearchPhrase = useDebounce(searchPhrase, 1000);
 
@@ -28,7 +28,7 @@ function App() {
 
   useEffect(() => {
     setDisableReplace(searchPhrase === '');
-  });
+  }, [searchPhrase]);
 
   const handleSearchFormSubmit = async (event) => {
     event.preventDefault();
@@ -44,18 +44,36 @@ function App() {
 
     const regex = new RegExp(`\\b${searchPhrase}\\b`, 'i');
 
-    const index = wikiData.findIndex(({ snippet }) => {
-      return regex.test(snippet);
+    const index = wikiData.findIndex(({ title, snippet }) => {
+      return regex.test(title) || regex.test(snippet);
     });
     if (index === -1) return;
 
     const newData = Array.from(wikiData);
     const edge = newData[index];
-    const newText = edge.snippet.replace(regex, replacePhrase);
-    const newItem = {
-      ...edge,
-      snippet: newText,
-    };
+    const searchPhraseInTitle = regex.test(edge.title);
+
+    let newItem;
+    switch (searchPhraseInTitle) {
+      case true: {
+        const newTitle = edge.title.replace(regex, replacePhrase);
+        newItem = {
+          ...edge,
+          title: newTitle,
+        };
+        break;
+      }
+      case false: {
+        const newSnippet = edge.snippet.replace(regex, replacePhrase);
+        newItem = {
+          ...edge,
+          snippet: newSnippet,
+        };
+        break;
+      }
+      default:
+        break;
+    }
 
     newData.splice(index, 1, newItem);
     setWikiData(newData);
