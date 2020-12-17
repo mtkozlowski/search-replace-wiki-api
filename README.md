@@ -15,3 +15,7 @@ This task was handed me as a part of recruitment process for Front end Developer
 ## Work journal:
 
 Snippets delivered by Wiki API are already encoded HTML with spans that have a class, which you can later use to highlight search word. However handy, in case of 2+ search phrases, Wiki API marks all ocurrences of search phrase and each word as well. Thus, I decided to strip all HTML and highlight search phrases with a plugin I found in NPM repo. I made that decision, so I can replace compound phrases, like `"Hello World"`.
+
+### Project can be previewed at:
+
+[https://search-replace-wiki-api.netlify.app/](https://search-replace-wiki-api.netlify.app/)
