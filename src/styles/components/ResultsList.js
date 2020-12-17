@@ -8,14 +8,23 @@ const StyledEntry = styled.li`
 `;
 
 const ResultLits = ({ results, searchPhrase }) => {
+  const searchPhrases = [searchPhrase, ...searchPhrase.split(' ')];
+
   const elements = results.map((entry) => {
     return (
       <StyledEntry key={entry.pageId}>
-        <h3>{entry.title}</h3>
+        <h3>
+          <Highlighter
+            highlightClassName="searchmatch"
+            searchWords={searchPhrases}
+            autoEscape
+            textToHighlight={entry.title}
+          />
+        </h3>
         <p>
           <Highlighter
             highlightClassName="searchmatch"
-            searchWords={[searchPhrase]}
+            searchWords={searchPhrases}
             autoEscape
             textToHighlight={entry.snippet}
           />
