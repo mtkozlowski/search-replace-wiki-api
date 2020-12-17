@@ -8,6 +8,10 @@ const GridDiv = styled.div`
   display: grid;
   grid-template-columns: 1fr 2fr;
 
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+
   align-items: center;
   justify-content: center;
 
@@ -24,6 +28,11 @@ const TitleContainer = styled.div`
     position: fixed;
     top: 50%;
     transform: translateY(-50%);
+
+    @media (max-width: 768px) {
+      position: static;
+      transform: none;
+    }
   }
 `;
 
