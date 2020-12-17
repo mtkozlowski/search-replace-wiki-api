@@ -62,5 +62,6 @@
       "eslint --fix",
       "git add"
     ]
-  }
+  },
+  "homepage": "https://search-replace-wiki-api.netlify.app"
 }
